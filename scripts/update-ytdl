@@ -1,0 +1,30 @@
+#!/bin/bash
+# verify if youtube-dl is in PATH
+if [ "$(command -v youtube-dl)" ] then
+# if positive, get it's path
+	bin_file=$(which youtube-dl)
+else
+# if negative, set the path
+	bin_file=/usr/local/bin/youtube-dl
+fi
+# wget the binary file from yt-dl.org, which is github independent
+# also verify if wget was successful
+if wget https://yt-dl.org/downloads/latest/youtube-dl -O $bin_file;
+then
+	download_sha256=$(sha256sum $bin_file | xargs)
+	echo "downloaded: "$download_sha256
+# get the SHA256 sum from the github page
+	source_sha256=$(lynx -dump http://ytdl-org.github.io/youtube-dl/download.html | awk 'f{print;f=0} /SHA256:/{f=1}' | xargs)" "$bin_file
+	echo "github:     "$source_sha256
+# check if the hashes match each other
+	if [ "$source_sha256" = "$download_sha256" ];
+	then
+		echo The sha256sums are equal. Installation successful.
+		chmod a+rx $bin_file
+	else
+		echo The sha256sums are not equal. Deleting files.
+		rm $bin_file
+	fi
+else
+	echo Could not download file. Exiting.
+fi

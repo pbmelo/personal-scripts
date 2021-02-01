@@ -1,0 +1,76 @@
+#!/bin/sh
+pwrsuppath="/sys/class/power_supply/"
+twobat=false
+if (( $(ls /sys/class/power_supply/ | wc -l) > 2 ))
+then
+	twobat=true
+	bmpath=$pwrsuppath"BAT1"
+fi
+#echo $twobat
+bupath=$pwrsuppath"BAT0"
+cpu0path="/sys/class/thermal/thermal_zone0/temp"
+cpu1path="/sys/class/thermal/thermal_zone1/temp"
+if [ "$(command -v iwgetid)" ]
+then
+	netman="wirtools"
+elif [ "$(command -v iw)" ]
+then
+	netman="iwd"
+fi
+#echo $netman
+while true
+do
+	if [ "$netman" == "iwd" ]
+	then
+		#essid=$(iw dev wlp3s0 info|grep ssid)
+		ssid=$(iw dev wlp3s0 info | grep ssid | sed 's/\tssid//g')
+	elif [ "$netman" == "wirtools" ]
+	then
+		ssid=$(iwgetid --raw)
+	fi
+	#signal quality at
+	#/proc/net/wireless
+	link=$(awk 'NR == 3 { print substr($3, 1, length($3)-1)}' /proc/net/wireless)
+	ramavail=$(free -h|awk 'NR == 2 { print $7 }')
+	diskfree=$(df -h /home|awk 'NR == 2 { print $4 }')
+	temp0=$(head -c 2 $cpu0path)
+	temp3=$(head -c 2 $cpu1path)
+	bubat=$(cat $bupath/capacity)
+	maxbat=$(cat $bupath/charge_stop_threshold)
+	if [ $(cat $bupath/status) == "Discharging" ]
+	then
+		bustat="-"
+	elif [ $(cat $bupath/status) == "Charging" ]
+	then
+		bustat="+"
+	else
+		bustat="?"
+	fi
+	date=$(date)
+	status=" "$ssid
+	status=$status" ($link)"
+	status=$status" | T: $temp0"
+	status=$status"|$temp3""C"
+	status=$status" | (~): $diskfree"
+	status=$status" | RAM: $ramavail"
+	if [ "$twobat" = true ]
+	then
+		bmbat=$(cat $bmpath/capacity)
+		if [ $(cat $bmpath/status) == "Discharging" ]
+		then
+			bmstat="-"
+		elif [ $(cat $bmpath/status) == "Charging" ]
+		then
+			bmstat="+"
+		else
+			bmstat="?"
+		fi
+		status=$status" | B0: $bubat%$bustat/$maxbat%"
+		status=$status" | B1: $bmbat%$bmstat"
+	else
+		status=$status" | B: $bubat%$bustat/$maxbat%"
+	fi
+	status=$status" | $date"
+	xsetroot -name "$status"
+	sleep 2
+done
