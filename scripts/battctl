@@ -1,0 +1,37 @@
+#!/bin/sh
+
+bat_path="/sys/class/power_supply/BAT0"
+stop_thshd_path=$bat_path"/charge_stop_threshold"
+stop_thshd=$(cat $stop_thshd_path)
+
+#echo $stop_thshd
+if [ -z $1 ]
+then
+	echo missing argument
+	echo toggle, set, etc
+else
+	if [ $1 == "toggle" ]
+	then
+		if [ $stop_thshd == 100 ]
+		then
+			echo going to 60
+			echo 60 | sudo tee $stop_thshd_path
+		elif [ $stop_thshd == 60 ]
+		then
+			echo going to 100
+			echo 100 | sudo tee $stop_thshd_path
+		else
+			echo going to 100
+			echo 100 | sudo tee $stop_thshd_path
+		fi
+	elif [ $1 == "set" ]
+	then
+		if [ -z $2 ]
+		then
+			echo missing argument
+		else
+			echo going to $2
+			echo $2 | sudo tee $stop_thshd_path
+		fi
+	fi
+fi
