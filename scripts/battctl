@@ -10,13 +10,13 @@ then
 	echo missing argument
 	echo toggle, set, etc
 else
-	if [ $1 == "toggle" ]
+	if [ "$1" = "toggle" ]
 	then
-		if [ $stop_thshd == 100 ]
+		if [ $stop_thshd = 100 ]
 		then
 			echo going to 60
 			echo 60 | sudo tee $stop_thshd_path
-		elif [ $stop_thshd == 60 ]
+		elif [ $stop_thshd = 60 ]
 		then
 			echo going to 100
 			echo 100 | sudo tee $stop_thshd_path
@@ -24,7 +24,7 @@ else
 			echo going to 100
 			echo 100 | sudo tee $stop_thshd_path
 		fi
-	elif [ $1 == "set" ]
+	elif [ "$1" = "set" ]
 	then
 		if [ -z $2 ]
 		then
