@@ -1,0 +1,12 @@
+#!/bin/sh
+
+stylusID=$(xsetwacom list | grep -i stylus | awk '{ print $7 }')
+
+if [ -z $1 ]
+then
+	monitor="eDP1"
+else
+	monitor=$1
+fi
+
+xsetwacom set $stylusID MapToOutput $monitor

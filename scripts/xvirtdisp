@@ -1,0 +1,22 @@
+#!/bin/sh
+
+virtoutput="VIRTUAL1"
+
+isconnected=$(xrandr | grep $virtoutput | grep -v disconnected)
+if [ ! -z "$isconnected" ]
+then
+	echo Virtual display already connected
+	exit 0
+fi
+mainoutput="eDP1"
+resolution="1920 1080"
+#resolution="1366 768"
+
+# Why do I need to substitute the double quotes for nothing in the script
+#newmode=$(cvt $resolution | awk 'NR==2 {gsub("Modeline ",""); sub(".00",""); print;}')
+newmode=$(cvt $resolution | awk 'NR==2 {gsub("Modeline ",""); sub(".00",""); gsub("\"",""); print;}')
+newmodename=$(echo $newmode | awk '{ gsub("\"",""); print $1 }')
+xrandr --newmode $newmode
+xrandr --addmode $virtoutput $newmodename
+xrandr --output $virtoutput --mode $newmodename --right-of $mainoutput
+#xrandr --output $virtoutput --mode $newmodename --same-as $mainoutput

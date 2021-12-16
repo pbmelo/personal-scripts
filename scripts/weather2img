@@ -1,0 +1,17 @@
+#!/bin/sh
+
+if [ -z $1 ]
+then
+	city="nyc"
+else
+        city=$1
+fi
+
+txt_file="weather_in_""$city""_ascii.txt"
+img_file="weather_in_""$city"".png"
+touch $txt_file
+echo "text 15,15 '" > $txt_file
+lynx -width 376 -dump wttr.in/"$city" >> $txt_file
+echo "'" >> $txt_file
+convert -size 910x670 xc:white -font "FreeMono" -pointsize 12 -fill black -draw @"$txt_file" "$img_file"
+rm $txt_file
