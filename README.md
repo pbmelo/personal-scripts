@@ -44,6 +44,7 @@ Dependencies: xsetwacom, awk
 Create a virtual display to be connected via a VNC client.
 
 Dependencies: xrandr, cvt, awk
+Note: Does not work on Wayland
 
 
 ### weather2img

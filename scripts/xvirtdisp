@@ -1,22 +1,87 @@
 #!/bin/sh
 
+# Create the virtual displays
+# /usr/share/X11/xorg.conf.d/20-intel.conf
+#
+# Section "Device"
+#     Identifier "intelgpu0"
+#     Driver "intel"
+#     Option "VirtualHeads" "2"
+# EndSection
+#
+# Section "Device"
+#     Identifier  "Configured Video Device"
+#     Driver      "dummy"
+# EndSection
+#
+# Section "Screen"
+#     Identifier  "Default Screen"
+#     Monitor     "Configured Monitor"
+#     Device      "Configured Video Device"
+#     DefaultDepth 24
+#     SubSection "Display"
+#     Depth 24
+#     Modes "1024x800"
+#     EndSubSection
+# EndSection
+
+conf_file="/usr/share/X11/xorg.conf.d/20-virtual-monitor.conf"
+if [ ! -e $conf_file ]
+then
+	echo Writing to $conf_file
+	sudo touch $conf_file
+	echo -e 'Section "Device"' | sudo tee --append $conf_file
+	echo -e '\t Identifier\t"intelgpu0"' | sudo tee --append $conf_file
+	echo -e '\t Driver\t"intel"' | sudo tee --append $conf_file
+	echo 'EndSection' | sudo tee --append $conf_file
+	echo You need to restart X now in order for the virtual display to appear.
+	echo ...or you might reboot.
+	exit 0
+fi
+
 virtoutput="VIRTUAL1"
+#virtoutput="HDMI-2"
 
 isconnected=$(xrandr | grep $virtoutput | grep -v disconnected)
 if [ ! -z "$isconnected" ]
 then
 	echo Virtual display already connected
-	exit 0
+	#exit 0
 fi
+
+#mainoutput=$(xrandr | awk '/ connected/ { print $1 }')
+#mainoutput="eDP-1"
 mainoutput="eDP1"
-resolution="1920 1080"
+
+#resolution="1920 1080"
+resolution="1280 800"
 #resolution="1366 768"
 
-# Why do I need to substitute the double quotes for nothing in the script
+# Why do I need to substitute the double quotes for nothing in the script? I don't know
 #newmode=$(cvt $resolution | awk 'NR==2 {gsub("Modeline ",""); sub(".00",""); print;}')
 newmode=$(cvt $resolution | awk 'NR==2 {gsub("Modeline ",""); sub(".00",""); gsub("\"",""); print;}')
 newmodename=$(echo $newmode | awk '{ gsub("\"",""); print $1 }')
 xrandr --newmode $newmode
 xrandr --addmode $virtoutput $newmodename
 xrandr --output $virtoutput --mode $newmodename --right-of $mainoutput
-#xrandr --output $virtoutput --mode $newmodename --same-as $mainoutput
+
+# Verify firewalld
+if [ $(command -v firewall-cmd) ]
+then
+	[ -z "$(sudo firewall-cmd --list-ports | grep 5900)" ] && sudo firewall-cmd --zone=public --add-port 5900/tcp
+fi
+
+# Start VNC
+clip_mode=$(xrandr | awk '/VIRTUAL1/ { print $3 }')
+if [ $(command -v x0vncserver) ]
+then
+# Option 1: Tiger VNC commandline
+	x0vncserver -rfbauth ~/.vnc/passwd Geometry=1920x1080+1366+0
+elif [ $(command -v x11vnc) ]
+then
+# Option 2: x11vnc
+	x11vnc -clip $clip_mode -viewonly
+else
+# Option 3: I don't know
+	echo Great! You can start your VNC now clipping the geometry $clip_mode
+fi

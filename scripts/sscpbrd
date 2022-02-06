@@ -1,2 +1,16 @@
 #!/bin/sh
-scrot -s -e 'xclip -selection c -t image/png < $f && rm $f'
+if [ "$(command -v import)" ]
+then
+	#imagemagick (working and the less buggy option)
+	f=/tmp/tmpimg_sscpbrd.png
+	import $f && xclip -selection clipboard -t image/png $f && rm $f
+elif [ "$(command -v scrot)" ]
+then
+	#scrot (working but sometimes a white line appears on the edges)
+	scrot -s -e 'xclip -selection clipboard -t image/png < $f && rm $f'
+elif [ "$(command -v ffmpeg)" ]
+then
+	#ffmpeg (incomplete)
+	resolution="1366x768"
+	ffmpeg -f x11grab -video_size $resolution -i $DISPLAY -vframes 1 screen.png
+fi
