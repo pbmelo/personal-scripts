@@ -7,31 +7,45 @@ stop_thshd=$(cat $stop_thshd_path)
 #echo $stop_thshd
 if [ -z $1 ]
 then
-	echo missing argument
-	echo toggle, set, etc
-else
-	if [ "$1" = "toggle" ]
+	echo
+	echo Usage: battctl [OPTION]... [PARAMETER]...
+	echo
+	echo Example: battctl set 75
+	echo to set the maximum battery charge stop threshold to 75%.
+	echo
+	echo An argument is mandatory.
+	echo
+	echo Options:
+	echo "  toggle,     toggle the maximum battery threshold from the"
+	echo "              recommended values of 100 to 60 or from 60 to 100."
+	echo "              Basically to echo toggle between 'docked' and"
+	echo "              'travel' modes.  Doesn't require a parameter."
+	echo "  set,        set the maximum battery threshold to a definite"
+	echo "              value.  Requires a parameter."
+	exit 1
+fi
+
+if [ "$1" = "toggle" ]
+then
+	if [ $stop_thshd = 100 ]
 	then
-		if [ $stop_thshd = 100 ]
-		then
-			echo going to 60
-			echo 60 | sudo tee $stop_thshd_path
-		elif [ $stop_thshd = 60 ]
-		then
-			echo going to 100
-			echo 100 | sudo tee $stop_thshd_path
-		else
-			echo going to 100
-			echo 100 | sudo tee $stop_thshd_path
-		fi
-	elif [ "$1" = "set" ]
+		echo going to 60
+		echo 60 | sudo tee $stop_thshd_path
+	elif [ $stop_thshd = 60 ]
 	then
-		if [ -z $2 ]
-		then
-			echo missing argument
-		else
-			echo going to $2
-			echo $2 | sudo tee $stop_thshd_path
-		fi
+		echo going to 100
+		echo 100 | sudo tee $stop_thshd_path
+	else
+		echo going to 100
+		echo 100 | sudo tee $stop_thshd_path
+	fi
+elif [ "$1" = "set" ]
+then
+	if [ -z $2 ]
+	then
+		echo missing argument
+	else
+		echo going to $2
+		echo $2 | sudo tee $stop_thshd_path
 	fi
 fi
