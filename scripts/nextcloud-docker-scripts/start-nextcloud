@@ -1,0 +1,2 @@
+#!/bin/sh
+sudo docker run --restart unless-stopped --name nextcloud -d -v $HOME/nextcloud:/var/www/html -p 8080:80 nextcloud:latest

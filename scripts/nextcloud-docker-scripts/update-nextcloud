@@ -1,0 +1,11 @@
+#!/bin/bash    
+set -ex
+
+out=$(docker pull nextcloud)
+
+if [[ $out != *"up to date"* ]]; then
+   docker stop nextcloud
+   docker rm -f nextcloud
+   start-nextcloud
+   docker image prune -f
+fi
